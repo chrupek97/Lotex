@@ -33,14 +33,17 @@ public class LotexDao {
     private static String databaseURL = "jdbc:derby://localhost:1527/LotexDB";
 
     private LotexDao() {
-    }
-
-    public static LotexDao getInstance() {
         try {
             conn = DriverManager.getConnection(databaseURL, "user1", "user1");
         } catch (SQLException ex) {
             Logger.getLogger(LotexDao.class.getName()).log(Level.SEVERE, null, ex);
         }
+        catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public static LotexDao getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new LotexDao();
         }
