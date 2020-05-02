@@ -14,6 +14,7 @@ import model.Customer;
 import model.Flight;
 import model.ModelBase;
 import model.Reservation;
+import resources.FlightsWithCityAndReservationDetails;
 import resources.ReservationsWithCustomerDetails;
 
 public class LotexDao {
@@ -23,7 +24,8 @@ public class LotexDao {
         CITIES,
         FLIGHTS,
         RESERVATIONS,
-        RESERVATIONDETAILS
+        RESERVATIONDETAILS,
+        FLIGHTDETAILS
     }
 
     private static Connection conn = null;
@@ -134,6 +136,7 @@ public class LotexDao {
 
                 break;
             }
+            
             case RESERVATIONS: {
                 sql += "RESERVATION ";
                 sql += additional;
@@ -150,6 +153,7 @@ public class LotexDao {
                 }
                 break;
             }
+            
             case RESERVATIONDETAILS: {
                 sql = "SELECT r.Price rPrice, r.ReservationDate rReservationDate, c.PESEL cPesel, c.FirstName cFirstName, "
                         + "c.LastName cLastName, c.BirthDate cBirthDate, c.Street cStreet, c.ZipCode cZipCode, c.ZipCity cZipCity, "
@@ -186,6 +190,38 @@ public class LotexDao {
                 }
             }
             break;
+            case FLIGHTDETAILS: {
+                sql = "SELECT f.number fNumber, d.name dName, s.name sName, f.dateStart fDateStart, "
+                        + "f.dateFinish fDateFinish, f.price fPrice, f.capacity fCapacity, "
+                        + "(SELECT COUNT(*) FROM RESERVATION WHERE f.id = flightid) as occupied, "
+                        + "d.latitude dLatitude, d.longitude dLoingitude, s.LATITUDE sLatitude, s.LONGITUDE sLongitude "
+                        + "FROM FLIGHT f JOIN CITY d ON f.destinationCityId = d.id "
+                        + "JOIN CITY s ON f.sourceCityId = s.id "
+                        + "JOIN RESERVATION r ON f.id = r.flightId ";         
+                sql += additional;
+                
+                ResultSet result = statement.executeQuery(sql);
+
+                while (result.next()) {
+                    FlightsWithCityAndReservationDetails fwcard = new FlightsWithCityAndReservationDetails();
+                    fwcard.setCapacity(result.getInt("fCapacity"));
+                    fwcard.setDateFinish(result.getDate("fDateStart"));
+                    fwcard.setDateStart(result.getDate("fDateEnd"));
+                    fwcard.setDestinationCity(result.getString("dName"));
+                    double destinationLatitude = result.getDouble("dLatitude");
+                    double destinationLongitude = result.getDouble("dLongitude");
+                    double sourceLatitude = result.getDouble("sLatitude");
+                    double sourceLongitude = result.getDouble("sLongitude");
+                    double distance = FlightsWithCityAndReservationDetails
+                            .calculateDistance(destinationLatitude, destinationLongitude, sourceLatitude, sourceLongitude);                      
+                    fwcard.setDistance(distance);
+                    fwcard.setNumber(result.getString("fNumber"));
+                    fwcard.setOccupied(result.getInt("occupied"));
+                    fwcard.setPrice(result.getDouble("fPrice"));
+                    fwcard.setSourceCity(result.getString("sName"));
+                    models.add(fwcard);
+                }
+            }
 
         }
 
