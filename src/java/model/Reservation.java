@@ -1,6 +1,7 @@
 package model;
 
-import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.Date;
 
 public class Reservation extends ModelBase {
     
@@ -16,14 +17,25 @@ public class Reservation extends ModelBase {
     @Override
     public String forSql() {
         String toReturn = "";
+        if(reservationDate == null) {
+            reservationDate = new Date();
+        }
         toReturn += buildString(number, true);
         toReturn += buildString(flightId, true);
         toReturn += buildString(customerId, true);
         toReturn += buildString(price, true);
-        toReturn += buildString(reservationDate.toString(), true);
+        toReturn += buildString((new Timestamp(reservationDate.getTime())).toString(), false);
         // TODO zbadać co zwraca to string klasy Date
 
         return toReturn;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getNumber() {

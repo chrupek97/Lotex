@@ -1,6 +1,6 @@
 package resources;
 
-import java.sql.Date;
+import java.util.Date;
 import model.ModelBase;
 
 public class ReservationsWithCustomerDetails extends ModelBase {
@@ -41,6 +41,14 @@ public class ReservationsWithCustomerDetails extends ModelBase {
 
     public double getPrice() {
         return price;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setPrice(double price) {

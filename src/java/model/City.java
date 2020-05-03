@@ -16,7 +16,7 @@ public class City extends ModelBase {
         toReturn += buildString(name, true); 
         toReturn += buildString(longitude, true);
         toReturn += buildString(latitude, true);
-        toReturn += buildString(population, true);
+        toReturn += buildString(population, false);
 
         return toReturn;
     }

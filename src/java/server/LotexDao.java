@@ -54,16 +54,16 @@ public class LotexDao {
         String sql = "INSERT INTO ";
         switch (table) {
             case CUSTOMERS:
-                sql += "CUSTOMER VALUES(";
+                sql += "CUSTOMER VALUES (";
                 break;
             case CITIES:
-                sql += "CITY VALUES(";
+                sql += "CITY VALUES (";
                 break;
             case FLIGHTS:
-                sql += "FLIGHT VALUES(";
+                sql += "FLIGHT VALUES (";
                 break;
             case RESERVATIONS:
-                sql += "RESERVATION VALUES(";
+                sql += "RESERVATION (Number, FlightId, CustomerId, Price, ReservationDate) VALUES (";
                 break;
             default:
                 throw new Exception("Not implemented case");
@@ -201,7 +201,7 @@ public class LotexDao {
             }
             break;
             case FLIGHTDETAILS: {
-                sql = "SELECT f.number fNumber, d.name dName, s.name sName, f.dateStart fDateStart, "
+                sql = "SELECT distinct f.id fid, f.number fNumber, d.name dName, s.name sName, f.dateStart fDateStart, "
                         + "f.dateFinish fDateFinish, f.price fPrice, f.capacity fCapacity, "
                         + "(SELECT COUNT(*) FROM RESERVATION WHERE f.id = flightid) as occupied, "
                         + "d.latitude dLatitude, d.longitude dLongitude, s.LATITUDE sLatitude, s.LONGITUDE sLongitude "
@@ -225,6 +225,7 @@ public class LotexDao {
                     double distance = FlightsWithCityAndReservationDetails
                             .calculateDistance(destinationLatitude, destinationLongitude, sourceLatitude, sourceLongitude);
                     fwcard.setDistance(distance);
+                    fwcard.setId(result.getInt("fid"));
                     fwcard.setNumber(result.getString("fNumber"));
                     fwcard.setOccupied(result.getInt("occupied"));
                     fwcard.setPrice(result.getDouble("fPrice"));

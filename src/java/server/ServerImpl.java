@@ -43,6 +43,7 @@ import javax.imageio.ImageIO;
 import javax.xml.ws.BindingType;
 import javax.xml.ws.soap.MTOM;
 import javax.xml.ws.soap.SOAPBinding;
+import model.ModelBase;
 
 @MTOM
 @BindingType(value = SOAPBinding.SOAP11HTTP_MTOM_BINDING)
@@ -361,7 +362,8 @@ public class ServerImpl implements IServer {
         LotexDao ld = LotexDao.getInstance();
 
         try {
-            return (Customer) ld.selectFrom(LotexDao.TABLE.CUSTOMERS, "c WHERE c.pesel = " + PESEL);
+            List<ModelBase> toReturn = ld.selectFrom(LotexDao.TABLE.CUSTOMERS, "c WHERE c.pesel = " + PESEL);
+            return toReturn.size() > 0 ? (Customer) toReturn.get(0) : null;
         } catch (SQLException ex) {
             throw new DataBaseException("Wystąpił błąd serwera");
         }

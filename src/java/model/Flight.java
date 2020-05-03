@@ -21,6 +21,14 @@ public class Flight extends ModelBase {
         return dateStartDate;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public void setDateStartDate(Date dateStartDate) {
         this.dateStartDate = dateStartDate;
     }

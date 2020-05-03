@@ -61,6 +61,14 @@ public class FlightsWithCityAndReservationDetails extends ModelBase{
         this.dateStart = dateStart;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public Date getDateFinish() {
         return dateFinish;
     }
