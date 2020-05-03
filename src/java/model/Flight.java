@@ -1,6 +1,6 @@
 package model;
 
-import java.sql.Date;
+import java.util.Date;
 import java.sql.Timestamp;
 
 public class Flight extends ModelBase {
@@ -9,10 +9,36 @@ public class Flight extends ModelBase {
     private int sourceCityId;
     private Timestamp dateStart;
     private Timestamp dateFinish;
+    private Date dateStartDate;
+    private Date dateFinishDate;
     private int capacity;
     private double price;
 
     public Flight() {
+    }
+
+    public Date getDateStartDate() {
+        return dateStartDate;
+    }
+
+    public void setDateStartDate(Date dateStartDate) {
+        this.dateStartDate = dateStartDate;
+    }
+
+    public Date getDateFinishDate() {
+        return dateFinishDate;
+    }
+
+    public void setDateFinishDate(Date dateFinishDate) {
+        this.dateFinishDate = dateFinishDate;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     

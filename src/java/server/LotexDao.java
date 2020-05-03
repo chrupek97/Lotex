@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,6 +132,9 @@ public class LotexDao {
                     f.setCapacity(result.getInt("Capacity"));
                     f.setDateFinish(result.getTimestamp("DateFinish"));
                     f.setDateStart(result.getTimestamp("DateStart"));
+                    f.setDateStartDate(new Date(result.getTimestamp("DateStart").getTime()));
+                    f.setDateFinishDate(new Date(result.getTimestamp("DateFinish").getTime()));
+                    f.setPrice(result.getDouble("Price"));
                     f.setDestinationCityId(result.getInt("DestinationCityId"));
                     f.setNumber(result.getString("Number"));
                     f.setSourceCityId(result.getInt("sourceCityId"));
@@ -197,7 +201,7 @@ public class LotexDao {
                 sql = "SELECT f.number fNumber, d.name dName, s.name sName, f.dateStart fDateStart, "
                         + "f.dateFinish fDateFinish, f.price fPrice, f.capacity fCapacity, "
                         + "(SELECT COUNT(*) FROM RESERVATION WHERE f.id = flightid) as occupied, "
-                        + "d.latitude dLatitude, d.longitude dLoingitude, s.LATITUDE sLatitude, s.LONGITUDE sLongitude "
+                        + "d.latitude dLatitude, d.longitude dLongitude, s.LATITUDE sLatitude, s.LONGITUDE sLongitude "
                         + "FROM FLIGHT f JOIN CITY d ON f.destinationCityId = d.id "
                         + "JOIN CITY s ON f.sourceCityId = s.id "
                         + "JOIN RESERVATION r ON f.id = r.flightId ";         
@@ -209,7 +213,7 @@ public class LotexDao {
                     FlightsWithCityAndReservationDetails fwcard = new FlightsWithCityAndReservationDetails();
                     fwcard.setCapacity(result.getInt("fCapacity"));
                     fwcard.setDateFinish(result.getDate("fDateStart"));
-                    fwcard.setDateStart(result.getDate("fDateEnd"));
+                    fwcard.setDateStart(result.getDate("fDateFinish"));
                     fwcard.setDestinationCity(result.getString("dName"));
                     double destinationLatitude = result.getDouble("dLatitude");
                     double destinationLongitude = result.getDouble("dLongitude");
@@ -224,11 +228,13 @@ public class LotexDao {
                     fwcard.setSourceCity(result.getString("sName"));
                     models.add(fwcard);
                 }
+                
             }
-
+            break;
         }
 
         return models;
     }
+    
 
 }

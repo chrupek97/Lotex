@@ -9,6 +9,7 @@ import model.City;
 import model.Customer;
 import model.Flight;
 import model.Reservation;
+import resources.FlightsWithCityAndReservationDetails;
 import resources.ReservationsWithCustomerDetails;
 
 @WebService
@@ -25,7 +26,7 @@ public interface IServer {
 
     void registerCustomer(Customer customer) throws IncorrectDataException;
     
-    List<Flight> getCurrentFlights();
+    List<FlightsWithCityAndReservationDetails> getCurrentFlights();
     
     void makeReservation(Reservation reservation) throws IncorrectDataException;
     

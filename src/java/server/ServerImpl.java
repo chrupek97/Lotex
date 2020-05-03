@@ -22,6 +22,7 @@ import model.Customer;
 import model.Flight;
 import model.ModelBase;
 import model.Reservation;
+import resources.FlightsWithCityAndReservationDetails;
 import resources.ReservationsWithCustomerDetails;
 
 @WebService(endpointInterface = "server.IServer")
@@ -75,6 +76,7 @@ public class ServerImpl implements IServer {
         JsonElement dateTo = jo.get("dateTo");
         JsonElement priceFrom = jo.get("priceFrom");
         JsonElement priceTo = jo.get("priceTo");
+       
 
         List<Flight> flightsFiltered = new ArrayList<>();
         boolean onlyActive = false;
@@ -86,12 +88,12 @@ public class ServerImpl implements IServer {
 
         if (sourceCityId != null) {
             additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
-            additiveSQL += " f.sourceCityId = " + sourceCityId;
+            additiveSQL += " f.sourceCityId = " + sourceCityId.getAsInt();
         }
 
         if (destinationCityId != null) {
             additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
-            additiveSQL += " f.destinationCityId = " + destinationCityId;
+            additiveSQL += " f.destinationCityId = " + destinationCityId.getAsInt();
         }
 
         if (dateFrom != null) {
@@ -106,12 +108,12 @@ public class ServerImpl implements IServer {
 
         if (priceFrom != null) {
             additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
-            additiveSQL += " f.price >=" + priceFrom;
+            additiveSQL += " f.price >=" + priceFrom.getAsInt();
         }
 
         if (priceTo != null) {
             additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
-            additiveSQL += " f.price <=" + priceTo;
+            additiveSQL += " f.price <=" + priceTo.getAsInt();
         }
 
         try {
@@ -175,7 +177,7 @@ public class ServerImpl implements IServer {
     }
 
     @Override
-    public List<Flight> getCurrentFlights() {
+    public List<FlightsWithCityAndReservationDetails> getCurrentFlights() {
         Date currentDate = new Date();
 
         Calendar c = Calendar.getInstance();
@@ -188,7 +190,7 @@ public class ServerImpl implements IServer {
 
         LotexDao ld = LotexDao.getInstance();
         try {
-            return (List<Flight>) (List<?>) ld.selectFrom(LotexDao.TABLE.FLIGHTS, "f WHERE dateStart>'" + dateFrom + "' AND dateStart<'" + dateTo + "'"
+            return (List<FlightsWithCityAndReservationDetails>) (List<?>) ld.selectFrom(LotexDao.TABLE.FLIGHTDETAILS, " WHERE dateStart>'" + dateFrom + "' AND dateStart<'" + dateTo + "'"
             );
         } catch (SQLException ex) {
             Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
