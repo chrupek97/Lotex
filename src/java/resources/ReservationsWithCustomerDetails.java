@@ -9,8 +9,11 @@ public class ReservationsWithCustomerDetails extends ModelBase {
     private Date reservationDate;
     private long PESEL;
     private String firstName;
+    private String number;
     private String lastName;
     private Date birthDate;
+    private Date dateStart;
+    private Date dateFinish;
     private String street;
     private String zipCode;
     private String zipCity;
@@ -163,4 +166,29 @@ public class ReservationsWithCustomerDetails extends ModelBase {
     public void setDistance(double distance) {
         this.distance = distance;
     }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
+
+    public Date getDateStart() {
+        return dateStart;
+    }
+
+    public void setDateStart(Date dateStart) {
+        this.dateStart = dateStart;
+    }
+
+    public Date getDateFinish() {
+        return dateFinish;
+    }
+
+    public void setDateFinish(Date dateFinish) {
+        this.dateFinish = dateFinish;
+    }
+
 }

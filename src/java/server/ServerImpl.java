@@ -3,70 +3,54 @@ package server;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.sql.SQLException;
+import com.itextpdf.text.pdf.draw.LineSeparator;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import com.itextpdf.text.Chunk;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.json.Json;
 import javax.jws.WebService;
 import model.City;
 import model.Customer;
 import model.Flight;
-import model.ModelBase;
 import model.Reservation;
 import resources.FlightsWithCityAndReservationDetails;
 import resources.ReservationsWithCustomerDetails;
+import java.text.SimpleDateFormat;
+import javax.imageio.ImageIO;
+import javax.xml.ws.BindingType;
+import javax.xml.ws.soap.MTOM;
+import javax.xml.ws.soap.SOAPBinding;
 
+@MTOM
+@BindingType(value = SOAPBinding.SOAP11HTTP_MTOM_BINDING)
 @WebService(endpointInterface = "server.IServer")
 public class ServerImpl implements IServer {
 
-//    @Override
-//    public String method() {
-//        try {
-//            ld = LotexDao.getInstance();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        List<ModelBase> list = null;
-//          }
-//        try {
-//            list = ld.selectFrom(LotexDao.TABLE.CUSTOMERS, 0, "");
-//            Flight f = new Flight();
-//            Calendar calendar = Calendar.getInstance();
-//            calendar.set(Calendar.DAY_OF_MONTH, 1);
-//            calendar.set(Calendar.MONTH, 10);
-//            calendar.set(Calendar.YEAR, 2020);
-//            calendar.set(Calendar.HOUR_OF_DAY, 13);
-//            calendar.set(Calendar.MINUTE, 12);
-//            Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());
-//            f.setId(2);
-//
-//            f.setCapacity(30);
-//            f.setDateStart(timestamp);
-//            f.setDateFinish(timestamp);
-//            f.setDestinationCityId(1);
-//            f.setSourceCityId(1);
-//            f.setNumber("5532332");
-//
-//            ld.insertInto(LotexDao.TABLE.FLIGHTS, f);
-//        } catch (SQLException ex) {
-//            Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (Exception ex) {
-//            Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//
-//        return "XD";
-//    }
     @Override
-    public List<Flight> searchFlight(String str) {
+    public List<FlightsWithCityAndReservationDetails> searchFlight(String str) {
         LotexDao ld = LotexDao.getInstance();
 
         JsonObject jo = new Gson().fromJson(str, JsonObject.class);
@@ -76,48 +60,47 @@ public class ServerImpl implements IServer {
         JsonElement dateTo = jo.get("dateTo");
         JsonElement priceFrom = jo.get("priceFrom");
         JsonElement priceTo = jo.get("priceTo");
-       
 
-        List<Flight> flightsFiltered = new ArrayList<>();
+        List<FlightsWithCityAndReservationDetails> flightsFiltered = new ArrayList<>();
         boolean onlyActive = false;
         String additiveSQL = "";
         if (onlyActive) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.capacity > (SELECT COUNT(*) FROM RESERVATION r  where r.flightid = f.id) ";
         }
 
         if (sourceCityId != null) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.sourceCityId = " + sourceCityId.getAsInt();
         }
 
         if (destinationCityId != null) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.destinationCityId = " + destinationCityId.getAsInt();
         }
 
         if (dateFrom != null) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.dateStart >= '" + dateFrom.getAsString() + "' ";
         }
 
         if (dateTo != null) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.dateStart <= '" + dateTo.getAsString() + "' ";
         }
 
         if (priceFrom != null) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.price >=" + priceFrom.getAsInt();
         }
 
         if (priceTo != null) {
-            additiveSQL += additiveSQL == "" ? " f WHERE " : " AND ";
+            additiveSQL += additiveSQL == "" ? " WHERE " : " AND ";
             additiveSQL += " f.price <=" + priceTo.getAsInt();
         }
 
         try {
-            flightsFiltered = (List<Flight>) (List<?>) ld.selectFrom(LotexDao.TABLE.FLIGHTS, additiveSQL);
+            flightsFiltered = (List<FlightsWithCityAndReservationDetails>) (List<?>) ld.selectFrom(LotexDao.TABLE.FLIGHTDETAILS, additiveSQL);
         } catch (SQLException ex) {
             return null;
         }
@@ -156,12 +139,6 @@ public class ServerImpl implements IServer {
         } catch (SQLException ex) {
             Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-//
-//        try {
-//            return (Reservation) ld.selectFrom(LotexDao.TABLE.FLIGHTS, "f WHERE f.id = " + flightId);
-//        } catch (SQLException ex) {
-//            throw new DataBaseException("Wystąpił błąd serwera");
-//        }
         return null;
     }
 
@@ -209,8 +186,184 @@ public class ServerImpl implements IServer {
         }
     }
 
+    public static PdfPCell getCell(String text, int alignment, boolean isBold, int font) {
+        Font regular = new Font(Font.FontFamily.HELVETICA, font, Font.NORMAL);
+        Font bold = new Font(Font.FontFamily.HELVETICA, font, Font.BOLD);
+        PdfPCell cell = new PdfPCell(new Phrase(text, isBold ? bold : regular));
+
+        cell.setPadding(2);
+        cell.setHorizontalAlignment(alignment);
+        cell.setBorder(PdfPCell.NO_BORDER);
+        return cell;
+    }
+
     @Override
-    public void printBoardingPass() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public byte[] printBoardingPass(String number) throws SQLException {
+        LotexDao ld = LotexDao.getInstance();
+        List<ReservationsWithCustomerDetails> rwcd
+                = (List<ReservationsWithCustomerDetails>) (List<?>) ld.selectFrom(LotexDao.TABLE.RESERVATIONDETAILS, " WHERE r.number = '" + number + "'");
+        OutputStream file = null;
+        Document document = null;
+        System.out.println(rwcd.size());
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy hh:mm");
+        Calendar calendar = Calendar.getInstance();
+        String todayDate = formatter.format(calendar.getTime());
+        String sourceCity = rwcd.get(0).getSourceCityName();
+        String destinationCity = rwcd.get(0).getDestinationCityName();
+        String dateStart = formatter.format(rwcd.get(0).getDateStart().getTime());
+        String dateFinish = formatter.format(rwcd.get(0).getDateFinish().getTime());
+        String price = Math.round(rwcd.get(0).getPrice() * 100.0) / 100.0 + "";
+        String PESEL = rwcd.get(0).getPESEL() + "";
+        String name = rwcd.get(0).getFirstName();
+        String lastname = rwcd.get(0).getDestinationCityName();
+        String phone = rwcd.get(0).getPhone();
+        String birthDate = formatter.format(rwcd.get(0).getBirthDate());
+        String zipCode = rwcd.get(0).getZipCode();
+        String zipCity = rwcd.get(0).getZipCity();
+        String street = rwcd.get(0).getStreet();
+
+        try {
+            file = new FileOutputStream(new File("D:\\Test.pdf"));
+            document = new Document();
+            PdfWriter.getInstance(document, file);
+            document.open();
+            Image img = Image.getInstance("logo.png");
+            img.scaleToFit(100, 100);
+            PdfPCell cell = new PdfPCell(img);
+            cell.setPadding(0);
+            cell.setHorizontalAlignment(PdfPCell.ALIGN_LEFT);
+            cell.setBorder(PdfPCell.NO_BORDER);
+
+            PdfPTable table = new PdfPTable(3);
+            table.setWidthPercentage(100);
+            table.addCell(cell);
+            table.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 12));
+            table.addCell(getCell(todayDate, PdfPCell.ALIGN_RIGHT, false, 15));
+
+            PdfPTable table2 = new PdfPTable(3);
+            table2.setSpacingBefore(50);
+            table2.setWidthPercentage(100);
+
+            PdfPTable table3 = new PdfPTable(3);
+            table3.setSpacingBefore(100);
+            table3.setWidthPercentage(100);
+
+            PdfPTable table4 = new PdfPTable(3);
+            table4.setSpacingBefore(50);
+            table4.setSpacingAfter(50);
+            table4.setWidthPercentage(100);
+
+            table2.addCell(getCell("Odlot", PdfPCell.ALIGN_LEFT, true, 17));
+            table2.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 17));
+            table2.addCell(getCell("Przylot", PdfPCell.ALIGN_RIGHT, true, 17));
+
+            table2.addCell(getCell(sourceCity, PdfPCell.ALIGN_LEFT, false, 15));
+            table2.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table2.addCell(getCell(destinationCity, PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table2.addCell(getCell(dateStart, PdfPCell.ALIGN_LEFT, false, 15));
+            table2.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table2.addCell(getCell(dateFinish, PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Dane osobowe", PdfPCell.ALIGN_LEFT, true, 17));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 17));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, true, 17));
+
+            table3.addCell(getCell("Imie: " + name, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Nazwisko: " + lastname, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("PESEL: " + PESEL, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Urodzony: " + birthDate, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Ulica: " + street, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Kod pocztowy: " + zipCode, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Miasto: " + zipCity, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table3.addCell(getCell("Telefon: " + phone, PdfPCell.ALIGN_LEFT, false, 14));
+            table3.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table3.addCell(getCell("", PdfPCell.ALIGN_RIGHT, false, 15));
+
+            table4.addCell(getCell("", PdfPCell.ALIGN_LEFT, false, 15));
+            table4.addCell(getCell("", PdfPCell.ALIGN_CENTER, false, 15));
+            table4.addCell(getCell(number, PdfPCell.ALIGN_RIGHT, true, 20));
+
+            img = Image.getInstance("queryCode.png");
+            img.scaleToFit(140, 60);
+            cell = new PdfPCell(img);
+            cell.setPadding(0);
+            cell.setHorizontalAlignment(PdfPCell.ALIGN_RIGHT);
+            cell.setBorder(PdfPCell.NO_BORDER);
+
+            table4.addCell(getCell("Cena: " + price, PdfPCell.ALIGN_LEFT, true, 17));
+            table4.addCell(getCell("", PdfPCell.ALIGN_CENTER, true, 17));
+            table4.addCell(getCell("", PdfPCell.ALIGN_RIGHT, true, 17));
+
+            Chunk linebreak = new Chunk(new LineSeparator());
+
+            document.add(table);
+            document.add(linebreak);
+            document.add(table2);
+            document.add(table3);
+            document.add(table4);
+            document.add(linebreak);
+            document.close();
+
+            file.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+        try {
+            InputStream input = new FileInputStream("D:\\Test.pdf");
+            int byteReads = 0;
+            byte [] data;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+                
+            while ((byteReads = input.read()) != -1) {
+                baos.write(byteReads);
+            }
+            data = baos.toByteArray();
+            input.close();
+            baos.close();
+            
+            return data;
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(ServerImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Customer getCustomer(long PESEL) throws DataBaseException {
+        LotexDao ld = LotexDao.getInstance();
+
+        try {
+            return (Customer) ld.selectFrom(LotexDao.TABLE.CUSTOMERS, "c WHERE c.pesel = " + PESEL);
+        } catch (SQLException ex) {
+            throw new DataBaseException("Wystąpił błąd serwera");
+        }
     }
 }
