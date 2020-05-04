@@ -17,6 +17,7 @@ import model.ModelBase;
 import model.Reservation;
 import resources.FlightsWithCityAndReservationDetails;
 import resources.ReservationsWithCustomerDetails;
+import resources.ReservationsWithFlightDetails;
 
 public class LotexDao {
 
@@ -26,7 +27,8 @@ public class LotexDao {
         FLIGHTS,
         RESERVATIONS,
         RESERVATIONDETAILS,
-        FLIGHTDETAILS
+        FLIGHTDETAILS,
+        RESERVATIONSWITHFLIGHTDETAILS
     }
 
     private static Connection conn = null;
@@ -170,9 +172,8 @@ public class LotexDao {
                         + "JOIN CITY s ON f.SourceCityID = s.id "
                         + "JOIN CITY d ON f.DestinationCityId = d.id ";
                 sql += additional;
-                System.out.println(sql);
                 ResultSet result = statement.executeQuery(sql);
-                
+
                 while (result.next()) {
                     ReservationsWithCustomerDetails rwcd = new ReservationsWithCustomerDetails();
                     rwcd.setBirthDate(result.getDate("cBirthDate"));
@@ -234,9 +235,39 @@ public class LotexDao {
                 }
             }
             break;
+
+            case RESERVATIONSWITHFLIGHTDETAILS: {
+                sql = "SELECT r.Price rPrice, r.Number rNumber, f.dateStart fDateStart, f.dateFinish fDateFinish, r.ReservationDate rReservationDate, "
+                        + "s.Name sName, s.Population sPopulation, s.Longitude sLongitude, s.Latitude sLatitude, "
+                        + "d.Name dName, d.Population dPopulation, d.Longitude dLongitude, d.Latitude dLatitude "
+                        + "FROM RESERVATION r "
+                        + "JOIN FLIGHT f ON r.FlightID = f.id "
+                        + "JOIN CITY s ON f.SourceCityID = s.id "
+                        + "JOIN CITY d ON f.DestinationCityId = d.id ";
+                sql += additional;
+                ResultSet result = statement.executeQuery(sql);
+
+                while (result.next()) {
+                    ReservationsWithFlightDetails rwfd = new ReservationsWithFlightDetails();         
+                    rwfd.setPrice(result.getDouble("rPrice"));
+                    rwfd.setReservationDate(result.getDate("rReservationDate"));
+                    rwfd.setDateStart(result.getDate("fDateStart"));
+                    rwfd.setDateFinish(result.getDate("fDateFinish"));
+                    rwfd.setNumber(result.getString("rNumber"));
+                    rwfd.setSourceCityName(result.getString("sName"));
+                    rwfd.setSourceCityPopulation(result.getInt("sPopulation"));
+                    rwfd.setDestinationCityName(result.getString("dName"));
+                    rwfd.setDestinationCityPopulation(result.getInt("dPopulation"));
+                    rwfd.setDistance(ReservationsWithCustomerDetails
+                            .calculateDistance(result.getDouble("sLatitude"), result.getDouble("sLongitude"),
+                                    result.getDouble("dLatitude"), result.getDouble("dLongitude")));
+                    models.add(rwfd);
+                }
+            }
+            break;
+
         }
-
         return models;
-    }
 
+    }
 }

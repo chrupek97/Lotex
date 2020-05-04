@@ -44,6 +44,7 @@ import javax.xml.ws.BindingType;
 import javax.xml.ws.soap.MTOM;
 import javax.xml.ws.soap.SOAPBinding;
 import model.ModelBase;
+import resources.ReservationsWithFlightDetails;
 
 @MTOM
 @BindingType(value = SOAPBinding.SOAP11HTTP_MTOM_BINDING)
@@ -218,6 +219,7 @@ public class ServerImpl implements IServer {
         String name = rwcd.get(0).getFirstName();
         String lastname = rwcd.get(0).getDestinationCityName();
         String phone = rwcd.get(0).getPhone();
+        formatter = new SimpleDateFormat("dd.MM.yyyy");
         String birthDate = formatter.format(rwcd.get(0).getBirthDate());
         String zipCode = rwcd.get(0).getZipCode();
         String zipCity = rwcd.get(0).getZipCity();
@@ -366,6 +368,19 @@ public class ServerImpl implements IServer {
             return toReturn.size() > 0 ? (Customer) toReturn.get(0) : null;
         } catch (SQLException ex) {
             throw new DataBaseException("Wystąpił błąd serwera");
+        }
+    }
+
+    @Override
+    public List<ReservationsWithFlightDetails> getReservationsByCustomerId(long id){
+        LotexDao ld = LotexDao.getInstance();
+        List<ReservationsWithFlightDetails> rwfd;
+        try {
+            rwfd = (List<ReservationsWithFlightDetails>) (List<?>) ld.selectFrom(LotexDao.TABLE.RESERVATIONSWITHFLIGHTDETAILS, " WHERE r.customerId = "+ id);
+            return rwfd;
+        } catch (SQLException ex) {
+            rwfd = null;
+            return rwfd;
         }
     }
 }

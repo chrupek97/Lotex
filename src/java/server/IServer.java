@@ -16,6 +16,7 @@ import model.Flight;
 import model.Reservation;
 import resources.FlightsWithCityAndReservationDetails;
 import resources.ReservationsWithCustomerDetails;
+import resources.ReservationsWithFlightDetails;
 
 @WebService
 @SOAPBinding(style = Style.DOCUMENT, use = Use.LITERAL)
@@ -38,5 +39,7 @@ public interface IServer {
     byte[] printBoardingPass(String number) throws SQLException;
 
     Customer getCustomer(long PESEL) throws DataBaseException;
+    
+    List<ReservationsWithFlightDetails> getReservationsByCustomerId(long id);
 
 }
