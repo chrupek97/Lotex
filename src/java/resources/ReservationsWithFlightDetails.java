@@ -1,6 +1,6 @@
 package resources;
 
-import java.sql.Date;
+import java.util.Date;
 import model.ModelBase;
 
 public class ReservationsWithFlightDetails extends ModelBase {
